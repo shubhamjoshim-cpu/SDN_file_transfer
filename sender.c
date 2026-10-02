@@ -13,9 +13,21 @@ int main(){
   receiver.sin_family = AF_INET;
   inet_pton(AF_INET,"127.0.0.1",&receiver.sin_addr);
   char message[1024];
+
+  FILE *fp=fopen("test.txt","rb");
+
+  char buffer[1024];
+  size_t n;
   while(1){
-  printf("type your message: ");
-  fgets(message,sizeof(message),stdin);
-  sendto(sockfd,message,strlen(message),0, (struct sockaddr *) &receiver,sizeof(receiver));
+    n=fread(buffer,1,sizeof(buffer),fp);
+    if(n==0) break;
+    sendto(sockfd,buffer,n,0,(struct sockaddr * )&receiver,sizeof(receiver));
+    printf("Read %zu bytes from sender",n);
   }
+  fclose(fp);
+
+  char eof[]="__EOF__";
+  sendto(sockfd,eof,strlen(eof),0,(struct sockaddr *)&receiver,sizeof(receiver));
+  return 0;
+
 }

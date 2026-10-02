@@ -21,12 +21,16 @@ server_addr.sin_addr.s_addr=INADDR_ANY;
 int a=bind(sockfd,(struct sockaddr *) &server_addr,sizeof(struct sockaddr_in));
 if(a<0) return 1;
 char buffer[1024];
+FILE *fp=fopen("received.txt","wb");
 while (1) {
   int n=recvfrom(sockfd,buffer,sizeof(buffer)-1,0,NULL,NULL);
 
   if(n<0) return 1;
 
   buffer[n] = '\0';
-  printf("Received: %s\n",buffer);
+  if(strcmp(buffer,"__EOF__")==0) break;
+  fwrite(buffer,1,n,fp);
+  
 }
+fclose(fp);
 }
