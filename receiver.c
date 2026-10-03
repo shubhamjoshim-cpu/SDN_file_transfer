@@ -29,22 +29,51 @@ if(fp==NULL){
   return 1;
 }
 struct packet pkt;
+struct sockaddr_in sender;
+socklen_t sender_len = sizeof(sender);
+
+int expected_seq=0;
+
+int dropped_ack=0;
+
 while(1){
-  int n=recvfrom(sockfd,&pkt,sizeof(pkt),0,NULL,NULL);
+  int n=recvfrom(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr*) &sender,&sender_len);
   if(n<0){
       perror("receiver failed");
   return 1;
 }
+
+struct ack ack;
+
 if(pkt.type==TYPE_F) {
   printf("End of file being sent");
   break;
 }
 else if(pkt.type==TYPE_D){
-  fwrite(pkt.data,1,pkt.length,fp);
-  printf("Received %dth packet of bytes: %d\n",pkt.sequence_number,pkt.length);
-}
+
+  if(expected_seq==pkt.sequence_number){
+    printf("Received %dth packet of %d bytes\n",pkt.sequence_number,pkt.length);
+    fwrite(pkt.data,1,pkt.length,fp);
+    expected_seq++;
   }
+  else if(expected_seq > pkt.sequence_number){
+    printf("Received duplicate packet.. discarding\n");
+}
+  else{
+    printf("unexpected packet");
+    continue;
+  }
+  if(pkt.sequence_number==2 && dropped_ack==0){
+    printf("simulating lost ack\n");
+    dropped_ack=1;
+    continue;
+  }
+    ack.sequence_number=pkt.sequence_number;
+    sendto(sockfd,&ack,sizeof(ack),0,(struct sockaddr * )& sender,sender_len);
+  }
+}
 fclose(fp);
 close(sockfd);
+
 
 }
