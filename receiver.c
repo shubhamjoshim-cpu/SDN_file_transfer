@@ -34,7 +34,6 @@ socklen_t sender_len = sizeof(sender);
 
 int expected_seq=0;
 
-int dropped_ack=0;
 
 while(1){
   int n=recvfrom(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr*) &sender,&sender_len);
@@ -61,11 +60,6 @@ else if(pkt.type==TYPE_D){
 }
   else{
     printf("unexpected packet");
-    continue;
-  }
-  if(pkt.sequence_number==2 && dropped_ack==0){
-    printf("simulating lost ack\n");
-    dropped_ack=1;
     continue;
   }
     ack.sequence_number=pkt.sequence_number;
