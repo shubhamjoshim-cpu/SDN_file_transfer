@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include "protocol.h"
+
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -20,17 +22,29 @@ server_addr.sin_addr.s_addr=INADDR_ANY;
 
 int a=bind(sockfd,(struct sockaddr *) &server_addr,sizeof(struct sockaddr_in));
 if(a<0) return 1;
-char buffer[1024];
-FILE *fp=fopen("received.txt","wb");
-while (1) {
-  int n=recvfrom(sockfd,buffer,sizeof(buffer)-1,0,NULL,NULL);
 
-  if(n<0) return 1;
-
-  buffer[n] = '\0';
-  if(strcmp(buffer,"__EOF__")==0) break;
-  fwrite(buffer,1,n,fp);
-  
+FILE *fp=fopen("receiver.txt","wb");
+if(fp==NULL){
+  perror("file reader failed");
+  return 1;
 }
+struct packet pkt;
+while(1){
+  int n=recvfrom(sockfd,&pkt,sizeof(pkt),0,NULL,NULL);
+  if(n<0){
+      perror("receiver failed");
+  return 1;
+}
+if(pkt.type==TYPE_F) {
+  printf("End of file being sent");
+  break;
+}
+else if(pkt.type==TYPE_D){
+  fwrite(pkt.data,1,pkt.length,fp);
+  printf("Received %dth packet of bytes: %d\n",pkt.sequence_number,pkt.length);
+}
+  }
 fclose(fp);
+close(sockfd);
+
 }
