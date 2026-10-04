@@ -3,3 +3,6 @@ sender
 controller
 *.o
 *.txt
+*.pdf
+*.png
+*.jpg

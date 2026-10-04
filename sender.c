@@ -24,7 +24,11 @@ int main(){
 
   char message[1024];
 
-  FILE *fp=fopen("test.txt","rb");
+  char name[256];
+  printf("Enter the file name: ");
+  scanf("%s",name);
+
+  FILE *fp=fopen(name,"rb");
   if(fp==NULL){
     perror("Error opening file");
     return 1;
@@ -34,6 +38,43 @@ int main(){
   int s=0;
 
   while(1) {
+
+    int acknow=0;
+
+    if(s==0){
+      pkt.type=TYPE_H;
+      strcpy(pkt.data,name);
+      pkt.length=strlen(name)+1;
+      pkt.sequence_number=s++;
+      sendto(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr *) &receiver,sizeof(receiver));
+      struct ack ack;
+
+      //wait for ack
+      while(!acknow) {
+        int r=recvfrom(sockfd,&ack,sizeof(ack),0,NULL,NULL);
+        if(r<0){
+          if(errno==EAGAIN || errno==EWOULDBLOCK){
+             printf("Timeout for packet, retransmitting packet %d ......",pkt.sequence_number);
+
+             sendto(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr *)&receiver,sizeof(receiver));
+             printf("Retransmission done\n");
+
+        }
+          else{
+            perror("recvfrom");
+            return 1;
+          }
+      }
+        else{
+          if(pkt.sequence_number==ack.sequence_number){
+            printf("Header ACK received\n");
+            acknow=1;
+          }
+        }
+      }
+     continue; 
+    }
+    
     size_t n=fread(pkt.data,1,PAYLOAD_SIZE,fp);
 
     if(n==0){
@@ -43,7 +84,6 @@ int main(){
       sendto(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr *) &receiver,sizeof(receiver));
       struct ack ack;
 
-      int acknow=0;
 
       while(!acknow){
         int r=recvfrom(sockfd,&ack,sizeof(ack),0,NULL,NULL);

@@ -3,6 +3,7 @@
 
 #define PAYLOAD_SIZE 1024
 
+#define TYPE_H 0
 #define TYPE_D 1
 #define TYPE_F 2
 #define TYPE_A 3
