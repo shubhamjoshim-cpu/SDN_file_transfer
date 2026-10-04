@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-  
+
 int main(){
 
   int sockfd;
@@ -31,10 +31,9 @@ int main(){
 
   char name[256];
   FILE *fp=NULL;
-  
+
   int fin_received=0;
 
-  int flag=0;
 
   while(1){
     int n=recvfrom(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr*) &sender,&sender_len);
@@ -64,8 +63,8 @@ int main(){
         sendto(sockfd,&ack,sizeof(ack),0,(struct sockaddr *)& sender,sender_len);
       }
       else if(pkt.sequence_number< expected_seq){
-          ack.sequence_number=pkt.sequence_number;
-          sendto(sockfd,&ack,sizeof(ack),0,(struct sockaddr *)& sender,sender_len);
+        ack.sequence_number=pkt.sequence_number;
+        sendto(sockfd,&ack,sizeof(ack),0,(struct sockaddr *)& sender,sender_len);
       }
       continue;
     }
@@ -78,7 +77,7 @@ int main(){
 
       if(!fin_received){
         fin_received=1;
-        
+
         struct timeval wait;
         wait.tv_sec=2;
         wait.tv_usec=0;
@@ -102,9 +101,9 @@ int main(){
         printf("unexpected packet");
         continue;
       }
-     
-        ack.sequence_number=pkt.sequence_number;
-        sendto(sockfd,&ack,sizeof(ack),0,(struct sockaddr * )& sender,sender_len);
+
+      ack.sequence_number=pkt.sequence_number;
+      sendto(sockfd,&ack,sizeof(ack),0,(struct sockaddr * )& sender,sender_len);
     }
   }
   fclose(fp);

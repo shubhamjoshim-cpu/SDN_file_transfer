@@ -21,8 +21,11 @@ int main(){
   struct sockaddr_in receiver;
   receiver.sin_port=htons(8000);
   receiver.sin_family = AF_INET;
+
   char ip[32];
+
   int choice;
+
   while(1){
     printf("Choose the destination: \n1.Local Transfer\n2.Network Transfer (host 2)\n");
     scanf("%d",&choice);
@@ -32,7 +35,7 @@ int main(){
     else if(choice == 1){
       strcpy(ip,"127.0.0.1");
       break;
-      
+
     }
     else{
       strcpy(ip,"10.0.4.2");
@@ -41,11 +44,10 @@ int main(){
   }
   inet_pton(AF_INET,ip,&receiver.sin_addr);
 
-  char message[1024];
 
   char name[256];
   printf("Enter the file name: ");
-  scanf("%s",name);
+  scanf("%255s",name);
 
   FILE *fp=fopen(name,"rb");
   if(fp==NULL){
@@ -73,17 +75,17 @@ int main(){
         int r=recvfrom(sockfd,&ack,sizeof(ack),0,NULL,NULL);
         if(r<0){
           if(errno==EAGAIN || errno==EWOULDBLOCK){
-             printf("Timeout for packet, retransmitting packet %d ......",pkt.sequence_number);
+            printf("Timeout for packet, retransmitting packet %d ......",pkt.sequence_number);
 
-             sendto(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr *)&receiver,sizeof(receiver));
-             printf("Retransmission done\n");
+            sendto(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr *)&receiver,sizeof(receiver));
+            printf("Retransmission done\n");
 
-        }
+          }
           else{
             perror("recvfrom");
             return 1;
           }
-      }
+        }
         else{
           if(pkt.sequence_number==ack.sequence_number){
             printf("Header ACK received\n");
@@ -91,9 +93,9 @@ int main(){
           }
         }
       }
-     continue; 
+      continue; 
     }
-    
+
     size_t n=fread(pkt.data,1,PAYLOAD_SIZE,fp);
 
     if(n==0){
@@ -128,36 +130,36 @@ int main(){
     }
 
     else{
-       pkt.type=TYPE_D; 
-       pkt.sequence_number=s++;
-       pkt.length=n;
+      pkt.type=TYPE_D; 
+      pkt.sequence_number=s++;
+      pkt.length=n;
 
-       sendto(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr *)& receiver,sizeof(receiver));
+      sendto(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr *)& receiver,sizeof(receiver));
 
-       struct ack ack;
-       int acknowlegement=0;
+      struct ack ack;
+      int acknowlegement=0;
 
-       while(!acknowlegement){
-         int r = recvfrom(sockfd,&ack,sizeof(ack),0,NULL,NULL);
-         if(r<0){
-           if(errno==EAGAIN || errno==EWOULDBLOCK){
-             printf("Timeout for packet, retransmitting packet %d ......",pkt.sequence_number);
+      while(!acknowlegement){
+        int r = recvfrom(sockfd,&ack,sizeof(ack),0,NULL,NULL);
+        if(r<0){
+          if(errno==EAGAIN || errno==EWOULDBLOCK){
+            printf("Timeout for packet, retransmitting packet %d ......",pkt.sequence_number);
 
-             sendto(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr *)&receiver,sizeof(receiver));
-             printf("Retransmission done\n");
+            sendto(sockfd,&pkt,sizeof(pkt),0,(struct sockaddr *)&receiver,sizeof(receiver));
+            printf("Retransmission done\n");
 
-             continue;
-           }
-           perror("recvfrom");
-           return 1;
-         }
-         if(pkt.sequence_number==ack.sequence_number){
-           printf("ACK %d received successfully\n",ack.sequence_number);
-           acknowlegement=1;
-         }
-       }
+            continue;
+          }
+          perror("recvfrom");
+          return 1;
+        }
+        if(pkt.sequence_number==ack.sequence_number){
+          printf("ACK %d received successfully\n",ack.sequence_number);
+          acknowlegement=1;
+        }
       }
-   }  
+    }
+  }  
   fclose(fp);
   close(sockfd);
 }
