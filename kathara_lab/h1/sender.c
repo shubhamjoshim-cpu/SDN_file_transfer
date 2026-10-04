@@ -20,7 +20,7 @@ int main(){
   struct sockaddr_in receiver;
   receiver.sin_port=htons(8000);
   receiver.sin_family = AF_INET;
-  inet_pton(AF_INET,"127.0.0.1",&receiver.sin_addr);
+  inet_pton(AF_INET,"10.0.4.2",&receiver.sin_addr);
 
   char message[1024];
 
