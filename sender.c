@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/time.h>
 #include "protocol.h"
@@ -20,7 +21,25 @@ int main(){
   struct sockaddr_in receiver;
   receiver.sin_port=htons(8000);
   receiver.sin_family = AF_INET;
-  inet_pton(AF_INET,"127.0.0.1",&receiver.sin_addr);
+  char ip[32];
+  int choice;
+  while(1){
+    printf("Choose the destination: \n1.Local Transfer\n2.Network Transfer (host 2)\n");
+    scanf("%d",&choice);
+    if(choice<1 || choice >2){
+      printf("Invalid input try again\n");
+    }
+    else if(choice == 1){
+      strcpy(ip,"127.0.0.1");
+      break;
+      
+    }
+    else{
+      strcpy(ip,"10.0.4.2");
+      break;
+    }
+  }
+  inet_pton(AF_INET,ip,&receiver.sin_addr);
 
   char message[1024];
 

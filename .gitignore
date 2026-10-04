@@ -6,3 +6,4 @@ controller
 *.pdf
 *.png
 *.jpg
+build/
